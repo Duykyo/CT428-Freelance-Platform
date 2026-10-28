@@ -1,5 +1,4 @@
 <?php
-// app/config/database.php
 $local = __DIR__ . '/database.local.php';
 if (is_file($local)) {
     return require $local;

@@ -13,6 +13,11 @@ class Database{
     }
 
     $c = require APP_ROOT . '/app/config/database.php';
+    if (!is_array($c)) {
+    error_log('Cấu hình DB không hợp lệ: file database.php/database.local.php phải return một mảng.');
+    http_response_code(500);
+    exit('Cấu hình cơ sở dữ liệu không hợp lệ.');
+}
     $dsn = "mysql:host={$c['host']};port={$c['port']};dbname={$c['dbname']};charset={$c['charset']}";
       
     try{
