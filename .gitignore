@@ -1,2 +1,17 @@
+# Cấu hình cục bộ (mỗi người một mật khẩu DB riêng)
 app/config/database.local.php
+.env
+
+# File tạm và thử nghiệm
+public/test-db.php
+
+# File người dùng tải lên
+public/uploads/*
+!public/uploads/.gitkeep
+
+# IDE và hệ điều hành
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 desktop.ini
