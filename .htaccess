@@ -1,0 +1,5 @@
+# Khi chạy trên XAMPP/Apache: mở http://localhost/<thu-muc-du-an>/ sẽ tự vào thư mục public/
+# (chỉ public/ là nơi được truy cập từ web)
+RewriteEngine On
+RewriteRule ^$ public/ [L]
+RewriteRule ^(?!public/)(.*)$ public/$1 [L]

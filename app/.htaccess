@@ -1,0 +1,3 @@
+# Không cho mở trực tiếp file trong app/ từ trình duyệt (views, controllers, cấu hình CSDL...).
+# Mọi request phải đi qua public/index.php.
+Require all denied
