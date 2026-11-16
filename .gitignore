@@ -1,2 +1,7 @@
 app/config/database.local.php
+desktop.ini# B? qua c�c thu m?c v� file c?u h�nh c?a tr? l� AI
+.agent/
+.claude/
+.gemini/
+CLAUDE.md
 desktop.ini
