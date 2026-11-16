@@ -15,98 +15,108 @@
       }
       $this->view('auth/register');
     }
-    //Xu ly dang ky
+    // Xu ly dang ky
     public function doRegister() {
       $this->requirePost();
 
-      if(!Csrf::verify($_POST['csrf'] ?? '')) {
+      if (!Csrf::verify($_POST['csrf'] ?? '')) {
         $this->json(['success' => false, 'message' => 'Token CSRF không hợp lệ. Vui lòng thử lại sau.'], 419);
       }
-      
-      $hoten = trim($_POST['hoten'] ?? '');
-      $email = trim($_POST['email'] ?? '');
-      $matkhau = trim($_POST['matkhau'] ?? '');
-      $vaitro = trim($_POST['vai_tro'] ?? '');
-      $kynang = trim($_POST['ky_nang'] ?? '');
+
+      $hoten   = trim($_POST['hoten'] ?? '');
+      $email   = trim($_POST['email'] ?? '');
+      $matkhau = $_POST['matkhau'] ?? '';
+      $xacnhan = $_POST['xacnhan'] ?? '';
+      $vaitro  = trim($_POST['vaitro'] ?? '');
+      $kynang  = trim($_POST['kynang'] ?? '');
 
       $errors = [];
 
-      if(empty($hoten)) {
-        $errors['hoten'] = 'Vui lòng nhập họ tên.';
+      if (empty($hoten) || mb_strlen($hoten) < 2) {
+        $errors['hoten'] = 'Vui lòng nhập họ tên từ 2 ký tự trở lên.';
       }
-      if(empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors['email'] = 'Vui lòng nhập email hợp lệ.';
       }
-      if(strlen($matkhau) < 8) {
+      if (strlen($matkhau) < 8) {
         $errors['matkhau'] = 'Mật khẩu phải có ít nhất 8 ký tự.';
       }
-      if(!in_array($vaitro, ['khachhang', 'freelancer'])) {
-        $errors['vai_tro'] = 'Vai trò không hợp lệ.';
+      if ($matkhau !== $xacnhan) {
+        $errors['xacnhan'] = 'Mật khẩu nhập lại không khớp.';
       }
-      if(!empty($errors)) {
-        $this->json(['success' => false, 'message' => "Dữ liệu nhập không hợp lệ.", 'errors' => $errors], 422);
+      if (!in_array($vaitro, ['khachhang', 'freelancer'], true)) {
+        $errors['vaitro'] = 'Vai trò không hợp lệ.';
       }
-      if(User::findByEmail($email)) {
+
+      if (!empty($errors)) {
+        $this->json(['success' => false, 'message' => 'Dữ liệu nhập không hợp lệ.', 'errors' => $errors], 422);
+      }
+      if (User::findByEmail($email)) {
         $this->json(['success' => false, 'message' => 'Email này đã được đăng ký.', 'errors' => ['email' => 'Email này đã tồn tại.']], 409);
       }
+
       $created = User::create([
         'hoten'   => $hoten,
         'email'   => $email,
         'matkhau' => $matkhau,
         'vaitro'  => $vaitro,
-        'kynang'  => $kynang
+        'kynang'  => $vaitro === 'freelancer' ? $kynang : ''
       ]);
-      if($created) {
+
+      if ($created) {
         $this->json([
           'success'  => true,
           'message'  => 'Đăng ký thành công.',
           'redirect' => url('auth/login')
         ]);
       } else {
-        $this->json(['success' => false, 'message' => 'Lỗi hệ thống khi tạo tài khoản.'], 419);
+        $this->json(['success' => false, 'message' => 'Lỗi hệ thống khi tạo tài khoản.'], 500);
       }
     }
+
     public function doLogin() {
       $this->requirePost();
 
-      if(!Csrf::verify($_POST['csrf'] ?? '')) {
+      if (!Csrf::verify($_POST['csrf'] ?? '')) {
         $this->json(['success' => false, 'message' => 'Token CSRF không hợp lệ. Vui lòng thử lại sau.'], 419);
       }
 
       $email   = trim($_POST['email'] ?? '');
       $matkhau = $_POST['matkhau'] ?? '';
 
-      $error = [];
-      if(empty($email)) {
+      $errors = [];
+      if (empty($email)) {
         $errors['email'] = 'Vui lòng nhập email.';
       }
-      if(empty($matkhau)) {
+      if (empty($matkhau)) {
         $errors['matkhau'] = 'Vui lòng nhập mật khẩu.';
       }
 
-      if(!empty($errors)) {
+      if (!empty($errors)) {
         $this->json(['success' => false, 'message' => 'Dữ liệu nhập không hợp lệ.', 'errors' => $errors], 422);
       }
 
       $user = User::findByEmail($email);
-      if(!$user || !password_verify($matkhau, $user['matkhau'])) {
+      $hash = $user['MatKhau'] ?? ($user['matkhau'] ?? '');
+      if (!$user || !password_verify($matkhau, $hash)) {
         $this->json(['success' => false, 'message' => 'Email hoặc mật khẩu không chính xác.'], 401);
       }
 
       session_regenerate_id(true);
       $_SESSION['user'] = [
-        'id'   => $user['ID'],
-        'name' => $user['HoTen'],
-        'email'=> $user['Email'],
-        'role' => $user['VaiTro']
+        'id'    => $user['ID'],
+        'name'  => $user['HoTen'],
+        'email' => $user['Email'],
+        'role'  => $user['VaiTro']
       ];
 
       $this->json([
-        'success' => true,
-        'message' => 'Đăng nhập thành công!',
-        'redirect'=> url(home_path($user['VaiTro']))
+        'success'  => true,
+        'message'  => 'Đăng nhập thành công!',
+        'redirect' => url(home_path($user['VaiTro']))
       ]);
     }
+    // dang xuat
     public function logout() {
       $this->requirePost();
       unset($_SESSION['user']);

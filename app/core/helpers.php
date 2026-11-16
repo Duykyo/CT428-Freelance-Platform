@@ -17,13 +17,13 @@
     return isset($_SESSION['user']) ? $_SESSION['user'] :null;
  }
  //Hàm kiểm tra vai trò người dùng hiện tại
- function home_path($role){
-    if($role === 'khach_hang'){
+// Hàm xác định trang chủ theo vai trò người dùng
+function home_path($role = '') {
+    if ($role === 'khachhang' || $role === 'khach_hang') {
         return 'project/mine';
-    } elseif($role === 'freelancer'){
+    }
+    if ($role === 'freelancer') {
         return 'project/index';
     }
-    return 'auth/login'; 
- }
-
-
+    return 'auth/login';
+}
