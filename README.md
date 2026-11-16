@@ -36,3 +36,4 @@ freelance-platform/
         ├── css/style.css
         └── js/app.js
 ```
+Thành viên: Nguyen Tuan Quang (Backend tìm kiếm, hồ sơ, rating; đặc tả, kiểm thử)
