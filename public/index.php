@@ -30,10 +30,17 @@ foreach ($requiredFiles as $file) {
     }
 }
 
-// 5. Router cơ bản: /controller/action (Mặc định vào auth/login)
-$controllerName = isset($_GET['controller']) ? $_GET['controller'] : 'auth';
-$actionName = isset($_GET['action']) ? $_GET['action'] : 'login';
+// 5. Router cơ bản: /controller/action/id (Mặc định vào auth/login)
+$urlPath  = trim($_GET['url'] ?? '', '/');
+$segments = $urlPath !== '' ? explode('/', $urlPath) : [];
 
+$controllerName = $_GET['controller'] ?? ($segments[0] ?? 'auth');
+$defaultAction  = ($controllerName === 'auth' && !isset($segments[0])) ? 'login' : 'index';
+$actionName     = $_GET['action'] ?? ($segments[1] ?? $defaultAction);
+
+if (isset($segments[2]) && !isset($_GET['id'])) {
+    $_GET['id'] = $segments[2];
+}
 $controllerClass = ucfirst($controllerName) . 'Controller';
 $controllerFile = BASE_PATH . '/app/controllers/' . $controllerClass . '.php';
 
