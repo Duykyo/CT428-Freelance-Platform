@@ -7,21 +7,22 @@ class ProjectController extends Controller
     public function __construct()
     {
         require_once BASE_PATH . '/app/models/Project.php';
+        require_once BASE_PATH . '/app/models/Review.php';
         $this->projectModel = new Project();
     }
 
     /**
-     * Trang tìm dự án (Freelancer).
+     * Trang tÃ¬m dá»± Ã¡n (Freelancer).
      */
     public function index(): void
     {
         $this->view('projects/index', [
-            'title' => 'Tìm dự án',
+            'title' => 'TÃ¬m dá»± Ã¡n',
         ]);
     }
 
     /**
-     * Endpoint JSON phục vụ tìm kiếm & lọc AJAX tại project/index.
+     * Endpoint JSON phá»¥c vá»¥ tÃ¬m kiáº¿m & lá»c AJAX táº¡i project/index.
      */
     public function search(): void
     {
@@ -38,7 +39,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Trang Dự án của tôi (Khách hàng).
+     * Trang Dá»± Ã¡n cá»§a tÃ´i (KhÃ¡ch hÃ ng).
      */
     public function mine(): void
     {
@@ -49,7 +50,7 @@ class ProjectController extends Controller
         $result = $this->projectModel->getByClient((int)$user['id'], $trangThai, $page, 10);
 
         $this->view('projects/mine', [
-            'title'      => 'Dự án của tôi',
+            'title'      => 'Dá»± Ã¡n cá»§a tÃ´i',
             'projects'   => $result['projects'],
             'total'      => $result['total'],
             'page'       => $result['page'],
@@ -59,18 +60,18 @@ class ProjectController extends Controller
     }
 
     /**
-     * Form đăng dự án mới.
+     * Form Ä‘Äƒng dá»± Ã¡n má»›i.
      */
     public function create(): void
     {
         $this->requireClient(false);
         $this->view('projects/create', [
-            'title' => 'Đăng dự án',
+            'title' => 'ÄÄƒng dá»± Ã¡n',
         ]);
     }
 
     /**
-     * Xử lý POST lưu dự án mới.
+     * Xá»­ lÃ½ POST lÆ°u dá»± Ã¡n má»›i.
      */
     public function store(): void
     {
@@ -82,7 +83,7 @@ class ProjectController extends Controller
         if (!empty($errors)) {
             $this->json([
                 'success' => false,
-                'message' => 'Vui lòng kiểm tra lại thông tin dự án.',
+                'message' => 'Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin dá»± Ã¡n.',
                 'errors'  => $errors,
             ], 422);
         }
@@ -92,24 +93,24 @@ class ProjectController extends Controller
 
         $this->json([
             'success'  => true,
-            'message'  => 'Đăng dự án thành công!',
+            'message'  => 'ÄÄƒng dá»± Ã¡n thÃ nh cÃ´ng!',
             'redirect' => url('project/show') . '?id=' . $newId,
         ]);
     }
 
     /**
-     * Trang chi tiết dự án (dùng chung cho Khách hàng, Freelancer và khách vãng lai).
+     * Trang chi tiáº¿t dá»± Ã¡n (dÃ¹ng chung cho KhÃ¡ch hÃ ng, Freelancer vÃ  khÃ¡ch vÃ£ng lai).
      */
     public function show($id = null): void
     {
         $projectId = (int)($id ?? ($_GET['id'] ?? 0));
         if ($projectId <= 0) {
-            $this->abortNotFound('Không tìm thấy dự án yêu cầu.');
+            $this->abortNotFound('KhÃ´ng tÃ¬m tháº¥y dá»± Ã¡n yÃªu cáº§u.');
         }
 
         $project = $this->projectModel->findById($projectId);
         if (!$project) {
-            $this->abortNotFound('Dự án không tồn tại hoặc đã bị xóa.');
+            $this->abortNotFound('Dá»± Ã¡n khÃ´ng tá»“n táº¡i hoáº·c Ä‘Ã£ bá»‹ xÃ³a.');
         }
 
         $user = current_user();
@@ -134,13 +135,13 @@ class ProjectController extends Controller
             'proposals'  => $proposals,
             'myProposal' => $myProposal,
             'canPropose' => $canPropose,
-            'canReview'  => false, // Sẽ nối ở module Đánh giá
-            'reviewed'   => false,
+            'canReview'  => ($project['TrangThai'] === 'hoan_thanh' && $userId > 0 && ($isOwner || ($myProposal && $myProposal['TrangThai'] === 'duoc_chon')) && !Review::hasReviewed($projectId, $userId)),
+            'reviewed'   => ($project['TrangThai'] === 'hoan_thanh' && $userId > 0 && Review::hasReviewed($projectId, $userId)),
         ]);
     }
 
     /**
-     * Form sửa dự án.
+     * Form sá»­a dá»± Ã¡n.
      */
     public function edit($id = null): void
     {
@@ -149,23 +150,23 @@ class ProjectController extends Controller
         $project = $this->projectModel->findById($projectId);
 
         if (!$project) {
-            $this->abortNotFound('Dự án không tồn tại.');
+            $this->abortNotFound('Dá»± Ã¡n khÃ´ng tá»“n táº¡i.');
         }
         if ((int)$project['ID_KhachHang'] !== (int)$user['id']) {
-            $this->abortForbidden('Bạn không có quyền chỉnh sửa dự án này.');
+            $this->abortForbidden('Báº¡n khÃ´ng cÃ³ quyá»n chá»‰nh sá»­a dá»± Ã¡n nÃ y.');
         }
         if ($project['TrangThai'] !== 'mo') {
             redirect('project/show?id=' . $projectId);
         }
 
         $this->view('projects/edit', [
-            'title'   => 'Sửa dự án',
+            'title'   => 'Sá»­a dá»± Ã¡n',
             'project' => $project,
         ]);
     }
 
     /**
-     * Xử lý POST cập nhật dự án.
+     * Xá»­ lÃ½ POST cáº­p nháº­t dá»± Ã¡n.
      */
     public function update(): void
     {
@@ -179,7 +180,7 @@ class ProjectController extends Controller
         if ($project['TrangThai'] !== 'mo') {
             $this->json([
                 'success' => false,
-                'message' => 'Chỉ có thể sửa dự án khi đang ở trạng thái mở nhận đề xuất.',
+                'message' => 'Chá»‰ cÃ³ thá»ƒ sá»­a dá»± Ã¡n khi Ä‘ang á»Ÿ tráº¡ng thÃ¡i má»Ÿ nháº­n Ä‘á» xuáº¥t.',
             ], 422);
         }
 
@@ -187,7 +188,7 @@ class ProjectController extends Controller
         if (!empty($errors)) {
             $this->json([
                 'success' => false,
-                'message' => 'Vui lòng kiểm tra lại thông tin cập nhật.',
+                'message' => 'Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin cáº­p nháº­t.',
                 'errors'  => $errors,
             ], 422);
         }
@@ -196,13 +197,13 @@ class ProjectController extends Controller
 
         $this->json([
             'success'  => true,
-            'message'  => 'Đã lưu thay đổi dự án.',
+            'message'  => 'ÄÃ£ lÆ°u thay Ä‘á»•i dá»± Ã¡n.',
             'redirect' => url('project/show') . '?id=' . $projectId,
         ]);
     }
 
     /**
-     * Xử lý POST hủy dự án (mo / dang_thuc_hien -> da_huy).
+     * Xá»­ lÃ½ POST há»§y dá»± Ã¡n (mo / dang_thuc_hien -> da_huy).
      */
     public function cancel(): void
     {
@@ -216,7 +217,7 @@ class ProjectController extends Controller
         if (!in_array($project['TrangThai'], ['mo', 'dang_thuc_hien'], true)) {
             $this->json([
                 'success' => false,
-                'message' => 'Không thể hủy dự án ở trạng thái hiện tại.',
+                'message' => 'KhÃ´ng thá»ƒ há»§y dá»± Ã¡n á»Ÿ tráº¡ng thÃ¡i hiá»‡n táº¡i.',
             ], 422);
         }
 
@@ -224,13 +225,13 @@ class ProjectController extends Controller
 
         $this->json([
             'success'  => true,
-            'message'  => 'Đã hủy dự án.',
+            'message'  => 'ÄÃ£ há»§y dá»± Ã¡n.',
             'redirect' => url('project/show') . '?id=' . $projectId,
         ]);
     }
 
     /**
-     * Xử lý POST đánh dấu hoàn thành (dang_thuc_hien -> hoan_thanh).
+     * Xá»­ lÃ½ POST Ä‘Ã¡nh dáº¥u hoÃ n thÃ nh (dang_thuc_hien -> hoan_thanh).
      */
     public function complete(): void
     {
@@ -244,7 +245,7 @@ class ProjectController extends Controller
         if ($project['TrangThai'] !== 'dang_thuc_hien') {
             $this->json([
                 'success' => false,
-                'message' => 'Chỉ có thể hoàn thành dự án đang thực hiện.',
+                'message' => 'Chá»‰ cÃ³ thá»ƒ hoÃ n thÃ nh dá»± Ã¡n Ä‘ang thá»±c hiá»‡n.',
             ], 422);
         }
 
@@ -252,13 +253,13 @@ class ProjectController extends Controller
 
         $this->json([
             'success'  => true,
-            'message'  => 'Dự án đã được đánh dấu hoàn thành!',
+            'message'  => 'Dá»± Ã¡n Ä‘Ã£ Ä‘Æ°á»£c Ä‘Ã¡nh dáº¥u hoÃ n thÃ nh!',
             'redirect' => url('project/show') . '?id=' . $projectId,
         ]);
     }
 
     /**
-     * Xử lý POST xóa dự án (chỉ khi mo hoặc da_huy).
+     * Xá»­ lÃ½ POST xÃ³a dá»± Ã¡n (chá»‰ khi mo hoáº·c da_huy).
      */
     public function delete(): void
     {
@@ -272,7 +273,7 @@ class ProjectController extends Controller
         if (!in_array($project['TrangThai'], ['mo', 'da_huy'], true)) {
             $this->json([
                 'success' => false,
-                'message' => 'Chỉ được xóa dự án đang mở hoặc đã hủy.',
+                'message' => 'Chá»‰ Ä‘Æ°á»£c xÃ³a dá»± Ã¡n Ä‘ang má»Ÿ hoáº·c Ä‘Ã£ há»§y.',
             ], 422);
         }
 
@@ -280,12 +281,12 @@ class ProjectController extends Controller
 
         $this->json([
             'success'  => true,
-            'message'  => 'Đã xóa dự án.',
+            'message'  => 'ÄÃ£ xÃ³a dá»± Ã¡n.',
             'redirect' => url('project/mine'),
         ]);
     }
 
-    /* ==================== HÀM HỖ TRỢ NỘI BỘ ==================== */
+    /* ==================== HÃ€M Há»– TRá»¢ Ná»˜I Bá»˜ ==================== */
 
     private function validateProjectInput(array $input): array
     {
@@ -299,26 +300,26 @@ class ProjectController extends Controller
 
         $titleLen = mb_strlen($tieude);
         if ($titleLen < 5 || $titleLen > 150) {
-            $errors['tieude'] = 'Tiêu đề phải từ 5 đến 150 ký tự.';
+            $errors['tieude'] = 'TiÃªu Ä‘á» pháº£i tá»« 5 Ä‘áº¿n 150 kÃ½ tá»±.';
         }
 
         if (mb_strlen($mota) < 20) {
-            $errors['mota'] = 'Mô tả công việc phải có ít nhất 20 ký tự.';
+            $errors['mota'] = 'MÃ´ táº£ cÃ´ng viá»‡c pháº£i cÃ³ Ã­t nháº¥t 20 kÃ½ tá»±.';
         }
 
         if (!is_numeric($ngansachRaw) || (int)$ngansachRaw <= 0) {
-            $errors['ngansach'] = 'Ngân sách phải là số nguyên lớn hơn 0.';
+            $errors['ngansach'] = 'NgÃ¢n sÃ¡ch pháº£i lÃ  sá»‘ nguyÃªn lá»›n hÆ¡n 0.';
         }
 
         $dt = DateTime::createFromFormat('Y-m-d', $han);
         if (!$dt || $dt->format('Y-m-d') !== $han) {
-            $errors['han'] = 'Hạn nhận đề xuất không hợp lệ.';
+            $errors['han'] = 'Háº¡n nháº­n Ä‘á» xuáº¥t khÃ´ng há»£p lá»‡.';
         } elseif ($han < date('Y-m-d')) {
-            $errors['han'] = 'Hạn nhận đề xuất phải từ hôm nay trở đi.';
+            $errors['han'] = 'Háº¡n nháº­n Ä‘á» xuáº¥t pháº£i tá»« hÃ´m nay trá»Ÿ Ä‘i.';
         }
 
         if (mb_strlen($kynang) > 500) {
-            $errors['kynang'] = 'Danh sách kỹ năng tối đa 500 ký tự.';
+            $errors['kynang'] = 'Danh sÃ¡ch ká»¹ nÄƒng tá»‘i Ä‘a 500 kÃ½ tá»±.';
         }
 
         return [
@@ -340,7 +341,7 @@ class ProjectController extends Controller
             if ($isAjax) {
                 $this->json([
                     'success'  => false,
-                    'message'  => 'Vui lòng đăng nhập để tiếp tục.',
+                    'message'  => 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ tiáº¿p tá»¥c.',
                     'redirect' => url('auth/login'),
                 ], 401);
             }
@@ -351,10 +352,10 @@ class ProjectController extends Controller
             if ($isAjax) {
                 $this->json([
                     'success' => false,
-                    'message' => 'Chức năng này chỉ dành cho tài khoản Khách hàng.',
+                    'message' => 'Chá»©c nÄƒng nÃ y chá»‰ dÃ nh cho tÃ i khoáº£n KhÃ¡ch hÃ ng.',
                 ], 403);
             }
-            $this->abortForbidden('Chức năng này chỉ dành cho tài khoản Khách hàng.');
+            $this->abortForbidden('Chá»©c nÄƒng nÃ y chá»‰ dÃ nh cho tÃ i khoáº£n KhÃ¡ch hÃ ng.');
         }
 
         return $user;
@@ -366,7 +367,7 @@ class ProjectController extends Controller
         if (!Csrf::verify($token)) {
             $this->json([
                 'success' => false,
-                'message' => 'Token CSRF không hợp lệ. Vui lòng thử lại sau.',
+                'message' => 'Token CSRF khÃ´ng há»£p lá»‡. Vui lÃ²ng thá»­ láº¡i sau.',
             ], 419);
         }
     }
@@ -375,10 +376,10 @@ class ProjectController extends Controller
     {
         $project = $this->projectModel->findById($projectId);
         if (!$project) {
-            $this->json(['success' => false, 'message' => 'Dự án không tồn tại.'], 404);
+            $this->json(['success' => false, 'message' => 'Dá»± Ã¡n khÃ´ng tá»“n táº¡i.'], 404);
         }
         if ((int)$project['ID_KhachHang'] !== $clientId) {
-            $this->json(['success' => false, 'message' => 'Bạn không có quyền thao tác trên dự án này.'], 403);
+            $this->json(['success' => false, 'message' => 'Báº¡n khÃ´ng cÃ³ quyá»n thao tÃ¡c trÃªn dá»± Ã¡n nÃ y.'], 403);
         }
         return $project;
     }
@@ -388,7 +389,7 @@ class ProjectController extends Controller
         http_response_code(404);
         $errorView = BASE_PATH . '/app/views/errors/404.php';
         if (file_exists($errorView)) {
-            $title = 'Không tìm thấy trang';
+            $title = 'KhÃ´ng tÃ¬m tháº¥y trang';
             require $errorView;
             exit();
         }
@@ -400,7 +401,7 @@ class ProjectController extends Controller
         http_response_code(403);
         $errorView = BASE_PATH . '/app/views/errors/403.php';
         if (file_exists($errorView)) {
-            $title = 'Không có quyền truy cập';
+            $title = 'KhÃ´ng cÃ³ quyá»n truy cáº­p';
             require $errorView;
             exit();
         }
