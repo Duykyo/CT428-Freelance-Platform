@@ -8,7 +8,6 @@ error_reporting(E_ALL);
 
 // 2. Khởi tạo Session và bảo mật Session ID
 session_start();
-session_regenerate_id(true);
 
 // 3. Định nghĩa đường dẫn gốc
 define('BASE_PATH', dirname(__DIR__));
