@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Äá»‹nh nghÄ©a Ä‘Æ°á»ng dáº«n gá»‘c cá»§a á»©ng dá»¥ng
 define('BASE_PATH', dirname(__DIR__));
 
