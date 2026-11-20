@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once BASE_PATH . '/app/models/Review.php';
 require_once BASE_PATH . '/app/models/Project.php';
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class Proposal {
     public static function getByFreelancer(int $freelancerId, int $page = 1, int $perPage = 10): array {
         $db = Database::get();

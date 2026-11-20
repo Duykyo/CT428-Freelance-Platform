@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class User {
     public static function findById(int $id): ?array {
         $db = Database::get();

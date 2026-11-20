@@ -1,6 +1,5 @@
 <?php
 class Controller {
-    // Hàm render view
     protected function view($view, $data = []) {
         extract($data);
 
@@ -8,32 +7,33 @@ class Controller {
         if (file_exists($viewFile)) {
             require $viewFile;
         } else {
+            http_response_code(404);
             die("<h1>Lỗi 404</h1><p>Không tìm thấy file giao diện: <b>$viewFile</b></p>");
         }
     }
-    // Hàm render view JSON
+
     protected function json($data, $code = 200) {
         http_response_code($code);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($data);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
         exit();
     }
-    // Hàm kiểm tra phương thức yêu cầu
+
     protected function requirePost() {
-        if($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            // Đã sửa: Thêm dấu $ vào $this
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->json(['success' => false, 'message' => 'Phương thức yêu cầu phải là POST'], 405);
         }
     }
-    // Hàm kiểm tra vai trò người dùng
-    protected function requireRole($role = null) {
-        $user = current_user();
-        if(!$user) {
+
+    protected function requireRole($roles) {
+        $user = $_SESSION['user'] ?? null;
+        if (!$user) {
             redirect('auth/login');
         }
-        if($role !== null && $user['role'] !== $role) {
+        $allowed = is_array($roles) ? $roles : [$roles];
+        if (!in_array($user['role'] ?? '', $allowed, true)) {
+            http_response_code(403);
             die("<h1>Lỗi 403</h1><p>Bạn không có quyền truy cập trang này.</p>");
         }
     }
 }
-?>

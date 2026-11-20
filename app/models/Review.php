@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class Review {
     public static function getUserRating(int $userId): array {
         $db = Database::get();
