@@ -66,3 +66,4 @@ CT428-Freelance-Platform/
         └── images/
             └── .gitkeep               giữ thư mục rỗng trên Git
 ```
+Thành viên: Nguyen Tuan Quang (Backend tìm kiếm, hồ sơ, rating; đặc tả, kiểm thử)
